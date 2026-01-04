@@ -25,7 +25,7 @@ export async function apiFetch<T = any>(
     const token = data?.session?.access_token;
 
     const headers: Record<string, string> = {
-      Content_Type: "application/json",
+      "Content-Type": "application/json",
     };
 
     if (token) {

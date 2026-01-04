@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/src/lib/supabaseClient";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 type userInfo = {
   email: string;
@@ -10,10 +11,24 @@ type userInfo = {
 
 export default function Navbar() {
   const [user, setUser] = useState<userInfo | null>();
-  const router = useRouter;
+  const router = useRouter();
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data } = await supabase.auth.getUser();
+
+      if (data.user) {
+        setUser({
+          email: data.user.email ?? "",
+          role: data.user.user_metadata?.role ?? "customer",
+        });
+      }
+    };
+    getUser();
+  }, []);
 
   const handleLogout = () => {
-    supabase.auth.signOut;
+    supabase.auth.signOut();
     router.push("/login");
   };
 
@@ -24,9 +39,15 @@ export default function Navbar() {
           <h1>Store</h1>
         </div>
         <div className="flex gap-5">
+          <div className="flex gap-3">
+            <Link href={"/products"}>Products</Link>
+            <Link href={"/carts"}>Cart</Link>
+          </div>
           <div className="flex flex-col">
-            <h2>Email</h2>
-            <h2>Role</h2>
+            <h2 className="text-white text-sm">{user?.email}</h2>
+            <h2 className="text-white text-sm text-right capitalize">
+              {user?.role}
+            </h2>
           </div>
           <button onClick={handleLogout} className="bg-red-500 px-2 rounded-lg">
             Logout

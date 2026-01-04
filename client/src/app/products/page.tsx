@@ -10,18 +10,19 @@ type Product = {
   price: number;
   rating: number;
   stock: number;
-  image_url: string | null;
+  image_url: string;
 };
 
 export default function Products() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [addId, setAddId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const data = await apiFetch<Product[]>("/products");
+        const data = await apiFetch<Product[]>("/product");
         setProducts(data);
         console.log(data, "ini data dari products");
       } catch (error) {
@@ -47,32 +48,60 @@ export default function Products() {
     <div>{error}</div>;
   }
 
+  const handleAddToCart = async (productId: string) => {
+    try {
+      setAddId(productId);
+      await apiFetch("/cart", {
+        method: "POST",
+        body: { product_id: productId, quantity: 1 },
+      });
+      alert("Add to cart");
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "failed add to cart");
+    }
+  };
+
   return (
-    <div className="h-screen">
+    <div className="bg-">
       <Navbar />
       {/* {products.length === 0 ? (
         <p>no products avaible.</p>
       ) : ( */}
       <div className="grid grid-cols-5 p-4 gap-3">
-        <div className="bg-white max-w-56 rounded-md drop-shadow-lg transition-shadow">
-          <div className="rounded-b-lg bg-gray-200 h-40 flex items-center justify-center rounded-md">
-            Image
-          </div>
-          <div className="m-3">
-            <h2 className="">Product Name</h2>
-            <p className="text-sm text-slate-500">Description</p>
-            <h2 className="">Price</h2>
-            <h3 className="text-sm text-slate-500">Stock</h3>
-            <div className="flex justify-center gap-4 mt-3">
-              <button className="outline-1 outline-blue-400 px-3 py-2 rounded-xl">
-                Buy now
-              </button>
-              <button className="bg-blue-400 px-2 py-1 rounded-xl">
-                Add to cart
-              </button>
+        {products.map((product) => (
+          <div
+            key={product.id}
+            className="bg-white max-w-56 rounded-md drop-shadow-lg transition-shadow"
+          >
+            <div className="rounded-b-lg h-40 flex items-center justify-center rounded-md">
+              <img
+                className="rounded-b-lg flex items-center justify-center rounded-md w-full h-full object-contain"
+                src={product.image_url}
+                alt={product.name}
+              />
+            </div>
+            <div className="m-3">
+              <h2 className="capitalize">{product.name}</h2>
+              <p className="text-sm text-slate-500 capitalize">
+                {product.description}
+              </p>
+              <h2 className="capitalize">Rp {product.price}</h2>
+              <h3 className="text-sm text-slate-500">{product.stock}</h3>
+              <div className="flex gap-2 mt-3 justify-between">
+                <button className="border border-blue-400 px-4 py-2 rounded-xl text-sm">
+                  Buy now
+                </button>
+                <button
+                  onClick={() => handleAddToCart(product.id)}
+                  disabled={product.stock === 0 || addId === product.id}
+                  className="bg-blue-400 px-4 py-1 rounded-xl text-sm"
+                >
+                  {addId === product.id ? "Adding" : "Add to cart"}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        ))}
       </div>
       {/* )} */}
     </div>
