@@ -63,7 +63,6 @@ export default function Products() {
 
   return (
     <div className="bg-">
-      <Navbar />
       {/* {products.length === 0 ? (
         <p>no products avaible.</p>
       ) : ( */}

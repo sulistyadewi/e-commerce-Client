@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "@/src/lib/apiClient";
+import Navbar from "@/src/components/navbar";
 
 type OrderRow = {
   id: string;
@@ -14,14 +15,21 @@ type OrderRow = {
     price: number;
     products: {
       name: string;
-    };
-  };
+    } | null;
+  }[];
 };
 
 export default function Orders() {
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const router = useRouter();
+
+  const statusShipping = (status: string) => {
+    const normalLize = status.toLowerCase();
+    if (normalLize.includes("paid")) {
+      return;
+    }
+  };
 
   const fetchOrder = async () => {
     try {
@@ -38,6 +46,12 @@ export default function Orders() {
     fetchOrder();
   }, []);
 
+  const formattedDate = (value: string) =>
+    new Date(value).toLocaleString("id-ID");
+
+  const formattedCurrency = (value: number) =>
+    `Rp ${value.toLocaleString("id-ID")}`;
+
   return (
     <div>
       <h1>Orders</h1>
@@ -46,21 +60,29 @@ export default function Orders() {
       ) : orders.length === 0 ? (
         <div>kamu belum punya order</div>
       ) : (
-        <div className="">
+        <div className="flex flex-col justify-center">
           {orders.map((order, index) => (
-            <div key={order.id}>
-              <h1>{order.id}</h1>
-              {/* {order.order_items?.slice(0, 2).map((item, index) => ( */}
-              <div>
-                <h2></h2>
-                <h2></h2>
-                <h2>price</h2>
-              </div>
-              {/* ))} */}
-
-              <h2>{order.status}</h2>
-              <h2>{order.payment_method}</h2>
-              <h1>{order.total_amount}</h1>
+            <div key={index} className="border max-w-lg bg-blue-300">
+              <button onClick={() => router.push(`/orders/${order.id}`)}>
+                <div>
+                  <h1>Order ID: #{order.id.slice(0, 7)}</h1>
+                  <h1>{formattedDate(order.created_at)}</h1>
+                  <h2>{order.status}</h2>
+                  <h2>{order.payment_method}</h2>
+                  <h1>{formattedCurrency(order.total_amount)}</h1>
+                  <p>{order.order_items.length}</p>
+                </div>
+                <div>
+                  {order.order_items.slice(0, 2).map((item, idx) => (
+                    <div key={idx}>
+                      <h2>{item.products?.name}</h2>
+                      <h2>{item.quantity}</h2>
+                      <h2>{item.price}</h2>
+                      <h2>{item.price * item.quantity}</h2>
+                    </div>
+                  ))}
+                </div>
+              </button>
             </div>
           ))}
         </div>

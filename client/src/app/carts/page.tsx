@@ -82,7 +82,6 @@ export default function Carts() {
 
   return (
     <div className="">
-      <Navbar />
       <div className="">
         <h1 className="font-semibold text-3xl m-5 text-center">My Cart</h1>
         <div className="max-w-lg bg-blue-300 mx-auto p-4 rounded-md mb-10">
