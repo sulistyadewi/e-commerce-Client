@@ -60,25 +60,42 @@ export default function Orders() {
       ) : orders.length === 0 ? (
         <div>kamu belum punya order</div>
       ) : (
-        <div className="flex flex-col justify-center">
+        <div className="flex justify-center">
           {orders.map((order, index) => (
-            <div key={index} className="border max-w-lg bg-blue-300">
-              <button onClick={() => router.push(`/orders/${order.id}`)}>
-                <div>
-                  <h1>Order ID: #{order.id.slice(0, 7)}</h1>
-                  <h1>{formattedDate(order.created_at)}</h1>
-                  <h2>{order.status}</h2>
-                  <h2>{order.payment_method}</h2>
-                  <h1>{formattedCurrency(order.total_amount)}</h1>
-                  <p>{order.order_items.length}</p>
+            <div
+              key={index}
+              className="w-lg bg-gray-200 rounded-lg shadow-md shadow-gray-400"
+            >
+              <button
+                onClick={() => router.push(`/orders/${order.id}`)}
+                className="w-full"
+              >
+                <div className="flex justify-between gap-5">
+                  <div>
+                    <h1>Order ID: #{order.id.slice(0, 7)}</h1>
+                  </div>
+                  <div className="flex flex-col text-left">
+                    <h1>{formattedDate(order.created_at)}</h1>
+                    <h2>Status: {order.status}</h2>
+                    <h2>Payment: {order.payment_method}</h2>
+                    <h1>
+                      Grand Total: {formattedCurrency(order.total_amount)}
+                    </h1>
+                    <p>Total Items: {order.order_items.length}</p>
+                  </div>
                 </div>
-                <div>
+                <div className="">
                   {order.order_items.slice(0, 2).map((item, idx) => (
-                    <div key={idx}>
+                    <div key={idx} className="flex gap-2">
                       <h2>{item.products?.name}</h2>
-                      <h2>{item.quantity}</h2>
-                      <h2>{item.price}</h2>
-                      <h2>{item.price * item.quantity}</h2>
+                      <div>
+                        <div className="flex gap-2">
+                          <h2>{item.quantity}</h2>
+                          <span>x</span>
+                          <h2>{item.price}</h2>
+                        </div>
+                        <h2>{item.price * item.quantity}</h2>
+                      </div>
                     </div>
                   ))}
                 </div>
