@@ -1,8 +1,15 @@
 "use client";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { apiFetch } from "@/src/lib/apiClient";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/src/lib/supabaseClient";
+import { log } from "console";
+
+type Category = {
+  id: string;
+  name: string;
+  description: string;
+};
 
 type Product = {
   id: string;
@@ -20,9 +27,8 @@ type ProductForm = {
   description: string;
   price: string;
   stock: string;
-  rating: string | null;
-  image_url: string | null;
-  category_id: string | null;
+  rating: string;
+  category_id: string;
 };
 
 const EmptyForm: ProductForm = {
@@ -31,14 +37,17 @@ const EmptyForm: ProductForm = {
   price: "",
   stock: "",
   rating: "",
-  image_url: "",
   category_id: "",
 };
 
 export default function ProductAdmin() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [category, setCategory] = useState<Category[]>([]);
   const [form, setForm] = useState<ProductForm>(EmptyForm);
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -50,42 +59,262 @@ export default function ProductAdmin() {
     loadUser();
   }, []);
 
+  const fetchProduct = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await apiFetch<Product[]>("/product");
+      console.log(data, "dari admin");
+      setProducts(data);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const fetchCategory = async () => {
+    try {
+      const data = await apiFetch<Category[]>("/category");
+      console.log(data, "ini data category");
+      setCategory(data);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  useEffect(() => {
+    if (isAdmin) {
+      Promise.all([fetchProduct(), fetchCategory()]).catch(() => {});
+    } else if (isAdmin === false) {
+      setLoading(false);
+    }
+  }, [isAdmin]);
+
+  const resetForm = () => {
+    setForm(EmptyForm);
+  };
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!form.name || !form.price || !form.stock || !form.category_id) {
+      setError("name, price, stock, category tidak boleh kosong");
+    }
+    setError(null);
+    let imageUrl: string | null = null;
+    try {
+      if (imageFile) {
+        const ext = imageFile.name.split(".").pop();
+        const fileName = `${Date.now()} - ${Math.random().toString(36).slice(2)}.${ext}`;
+        const filePath = `productImage/${fileName}`;
+        const { error: uploadError } = await supabase.storage
+          .from("productImage")
+          .upload(filePath, imageFile, { contentType: imageFile.type });
+        if (uploadError) {
+          console.log(uploadError);
+          throw uploadError;
+        }
+        const { data } = supabase.storage
+          .from("productImage")
+          .getPublicUrl(filePath);
+        imageUrl = data.publicUrl;
+      }
+      const payLoad = {
+        name: form.name,
+        description: form.description,
+        price: Number(form.price),
+        stock: Number(form.stock),
+        rating: form.rating ? Number(form.rating) : null,
+        image_url: imageUrl || null,
+        category_id: form.category_id,
+      };
+      await apiFetch("/product", { method: "POST", body: payLoad });
+      await fetchProduct();
+      resetForm();
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const handleChange = (key: keyof ProductForm, value: string) => {
+    setForm((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
+
   return (
     <div>
       {isAdmin === false ? (
         <div>Halaman ini hanya untuk Admin</div>
       ) : (
         <div>
-          <form action="">
-            <div>
-              <label htmlFor="">Product Name</label>
-              <input type="text" />
+          <div className="flex flex-col justify-center">
+            <form
+              onSubmit={handleSubmit}
+              className="bg-gray-200 max-w-md flex flex-col justify-center p-2"
+            >
+              <div className="flex flex-col">
+                <label htmlFor="">Product Name</label>
+                <input
+                  type="text"
+                  value={form.name}
+                  onChange={(e) => handleChange("name", e.target.value)}
+                  className="bg-white p-2"
+                />
+              </div>
+              <div className="flex flex-col">
+                <label htmlFor="">Description</label>
+                <textarea
+                  name=""
+                  id=""
+                  value={form.description}
+                  onChange={(e) => handleChange("description", e.target.value)}
+                  className="bg-white p-2"
+                />
+              </div>
+              <div className="flex flex-col">
+                <label htmlFor="">Price</label>
+                <input
+                  type="text"
+                  value={form.price}
+                  onChange={(e) => handleChange("price", e.target.value)}
+                  className="bg-white p-2"
+                />
+              </div>{" "}
+              <div className="flex flex-col">
+                <label htmlFor="">Stock</label>
+                <input
+                  type="text"
+                  value={form.stock}
+                  onChange={(e) => handleChange("stock", e.target.value)}
+                  className="bg-white p-2"
+                />
+              </div>{" "}
+              <div className="flex flex-col">
+                <label htmlFor="">Image Link</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
+                  className="bg-white p-2"
+                />
+              </div>{" "}
+              <div className="flex flex-col">
+                <label htmlFor="">Rating</label>
+                <input
+                  type="text"
+                  value={form.rating}
+                  onChange={(e) => handleChange("rating", e.target.value)}
+                  className="bg-white p-2"
+                />
+              </div>{" "}
+              {/* CATEGORY */}
+              <div className="flex flex-col">
+                <label htmlFor="">Category</label>
+                <select
+                  id=""
+                  value={form.category_id}
+                  onChange={(e) => handleChange("category_id", e.target.value)}
+                  className="bg-white"
+                >
+                  <option value="">Pilih Category</option>
+                  {category.map((item, id) => (
+                    <option value={item.id} key={id}>
+                      {item.name}
+                    </option>
+                  ))}
+                </select>
+              </div>{" "}
+              <div>
+                <button
+                  type="submit"
+                  className="px-2 py-2 bg-blue-500 rounded mt-5"
+                >
+                  Create Product
+                </button>
+              </div>
+            </form>
+          </div>
+          {/* <div className="flex flex-col justify-center px-2 mt-5">
+            <div className="font-semibold border flex justify-between px-5 bg-gray-300">
+              <h1>Image</h1>
+              <h1>Product Name</h1>
+              <h1>Description</h1>
+              <h1>Price</h1>
+              <h1>Stock</h1>
+              <h1></h1>
             </div>
-            <div>
-              <label htmlFor="">Description</label>
-              <textarea name="" id=""></textarea>
-            </div>
-            <div>
-              <label htmlFor="">Price</label>
-              <input type="text" />
-            </div>{" "}
-            <div>
-              <label htmlFor="">Stock</label>
-              <input type="text" />
-            </div>{" "}
-            <div>
-              <label htmlFor="">Image Link</label>
-              <input type="text" />
-            </div>{" "}
-            <div>
-              <label htmlFor="">Rating</label>
-              <input type="text" />
-            </div>{" "}
-            <div>
-              <label htmlFor="">Category</label>
-              <input type="text" />
-            </div>{" "}
-          </form>
+            {products.map((product, index) => (
+              <div key={index} className="flex justify-between border px-5">
+                <img
+                  src={product.image_url}
+                  alt={product.name}
+                  className="w-20 h-20"
+                />
+                <h2>{product.name}</h2>
+                <h2>{product.description}</h2>
+                <h2>{product.price}</h2>
+                <h2>{product.stock}</h2>
+                <div className="flex">
+                  <h2 className="text-blue-500">Edit</h2>
+                  <h2 className="text-red-500">Delete</h2>
+                </div>
+              </div>
+            ))}
+          </div> */}
+
+          <div className="overflow-x-auto shadow-xs rounded-base border px-5">
+            <table className="w-full text-sm text-left rtl:text-right ">
+              <thead className="text-sm bg-slate-300">
+                <tr>
+                  {/* <th scope="col" className="px-6 py-3 font-medium">
+                    Image
+                  </th> */}
+                  <th scope="col" className="px-6 py-3 font-medium">
+                    Product Name
+                  </th>
+                  <th scope="col" className="px-6 py-3 font-medium">
+                    Description
+                  </th>
+                  <th scope="col" className="px-6 py-3 font-medium">
+                    Price
+                  </th>
+                  <th scope="col" className="px-6 py-3 font-medium">
+                    Stock
+                  </th>
+                  <th scope="col" className="px-6 py-3 font-medium">
+                    <span className="sr-only">Edit</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {products.map((product, index) => (
+                  <tr
+                    key={index}
+                    className="bg-neutral-primary-soft border-b border-default hover:bg-neutral-secondary-medium"
+                  >
+                    {/* <th
+                      scope="row"
+                      className="px-6 py-4 font-medium text-heading whitespace-nowrap w-20 h-20"
+                    >
+                      <img src={product.image_url} alt={product.name} />
+                    </th> */}
+                    <td className="px-6 py-4">{product.name}</td>
+                    <td className="px-6 py-4">{product.description}</td>
+                    <td className="px-6 py-4">{product.price}</td>
+                    <td className="px-6 py-4">{product.stock}</td>
+                    <td className="px-6 py-4 text-right">
+                      <a
+                        href="#"
+                        className="font-medium text-fg-brand hover:underline"
+                      >
+                        Edit
+                      </a>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>

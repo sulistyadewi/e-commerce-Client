@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { apiFetch } from "@/src/lib/apiClient";
 import Navbar from "@/src/components/navbar";
+import Image from "next/image";
 
 type Product = {
   id: string;
@@ -29,7 +30,7 @@ export default function Products() {
         setError(
           error instanceof Error
             ? error.message
-            : "Failed to fetch Products from Supabase"
+            : "Failed to fetch Products from Supabase",
         );
       } finally {
         setLoading(false);
@@ -73,11 +74,17 @@ export default function Products() {
             className="bg-white max-w-56 rounded-md drop-shadow-lg transition-shadow"
           >
             <div className="rounded-b-lg h-40 flex items-center justify-center rounded-md">
-              <img
+              <Image
+                src={product.image_url || null}
+                width={40}
+                height={40}
+                alt={product.name}
+              />
+              {/* <img
                 className="rounded-b-lg flex items-center justify-center rounded-md w-full h-full object-contain"
                 src={product.image_url}
                 alt={product.name}
-              />
+              /> */}
             </div>
             <div className="m-3">
               <h2 className="capitalize">{product.name}</h2>
