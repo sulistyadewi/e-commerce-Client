@@ -45,6 +45,8 @@ export default function ProductAdmin() {
   const [category, setCategory] = useState<Category[]>([]);
   const [form, setForm] = useState<ProductForm>(EmptyForm);
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const [editId, setEditId] = useState<string | null>(null);
+  const [saving, setSaving] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -91,6 +93,8 @@ export default function ProductAdmin() {
 
   const resetForm = () => {
     setForm(EmptyForm);
+    setEditId(null);
+    setImageFile(null);
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -126,7 +130,11 @@ export default function ProductAdmin() {
         image_url: imageUrl || null,
         category_id: form.category_id,
       };
-      await apiFetch("/product", { method: "POST", body: payLoad });
+      if (editId) {
+        await apiFetch(`/product/${editId}`, { method: "PUT", body: payLoad });
+      } else {
+        await apiFetch("/product", { method: "POST", body: payLoad });
+      }
       await fetchProduct();
       resetForm();
     } catch (err) {
@@ -139,6 +147,31 @@ export default function ProductAdmin() {
       ...prev,
       [key]: value,
     }));
+  };
+
+  const handleEdit = async (product: Product) => {
+    setEditId(product.id);
+    setForm({
+      name: product.name ?? "",
+      description: product.description ?? "",
+      price: String(product.price) ?? "",
+      stock: String(product.stock) ?? "",
+      image_url: product.image_url ?? "",
+      rating: product.rating ? String(product.rating) : "",
+      category_id: product.category_id ?? "",
+    });
+    setImageFile(null);
+  };
+
+  const handleDelete = async (productId: string) => {
+    const confirmDelete = window.confirm("Apakah Produk ingin dihapus?");
+    if (!confirmDelete) return;
+    try {
+      await apiFetch(`/product/${productId}`, { method: "DELETE" });
+      await fetchProduct();
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   return (
@@ -224,43 +257,22 @@ export default function ProductAdmin() {
                   ))}
                 </select>
               </div>{" "}
-              <div>
+              <div className="flex gap-3">
                 <button
                   type="submit"
+                  disabled={saving}
                   className="px-2 py-2 bg-blue-500 rounded mt-5"
                 >
-                  Create Product
+                  {saving ? "Saving..." : editId ? "Edit" : "Create"}
                 </button>
+                {editId ? (
+                  <button className=" px-2 py-2 bg-red-500 text-white rounded mt-5">
+                    Cancel
+                  </button>
+                ) : null}
               </div>
             </form>
           </div>
-          {/* <div className="flex flex-col justify-center px-2 mt-5">
-            <div className="font-semibold border flex justify-between px-5 bg-gray-300">
-              <h1>Image</h1>
-              <h1>Product Name</h1>
-              <h1>Description</h1>
-              <h1>Price</h1>
-              <h1>Stock</h1>
-              <h1></h1>
-            </div>
-            {products.map((product, index) => (
-              <div key={index} className="flex justify-between border px-5">
-                <img
-                  src={product.image_url}
-                  alt={product.name}
-                  className="w-20 h-20"
-                />
-                <h2>{product.name}</h2>
-                <h2>{product.description}</h2>
-                <h2>{product.price}</h2>
-                <h2>{product.stock}</h2>
-                <div className="flex">
-                  <h2 className="text-blue-500">Edit</h2>
-                  <h2 className="text-red-500">Delete</h2>
-                </div>
-              </div>
-            ))}
-          </div> */}
 
           <div className="overflow-x-auto shadow-xs rounded-base border px-5">
             <table className="w-full text-sm text-left rtl:text-right ">
@@ -303,12 +315,18 @@ export default function ProductAdmin() {
                     <td className="px-6 py-4">{product.price}</td>
                     <td className="px-6 py-4">{product.stock}</td>
                     <td className="px-6 py-4 text-right">
-                      <a
-                        href="#"
-                        className="font-medium text-fg-brand hover:underline"
+                      <button
+                        onClick={() => handleEdit(product)}
+                        className="text-blue-400 hover:underline mx-2"
                       >
                         Edit
-                      </a>
+                      </button>
+                      <button
+                        onClick={() => handleDelete(product.id)}
+                        className="text-red-400 hover:underline"
+                      >
+                        Delete
+                      </button>
                     </td>
                   </tr>
                 ))}

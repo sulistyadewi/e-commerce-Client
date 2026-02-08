@@ -63,7 +63,7 @@ export default function Products() {
   };
 
   return (
-    <div className="bg-">
+    <div className="">
       {/* {products.length === 0 ? (
         <p>no products avaible.</p>
       ) : ( */}
@@ -74,12 +74,14 @@ export default function Products() {
             className="bg-white max-w-56 rounded-md drop-shadow-lg transition-shadow"
           >
             <div className="rounded-b-lg h-40 flex items-center justify-center rounded-md">
-              <Image
-                src={product.image_url || null}
-                width={40}
-                height={40}
-                alt={product.name}
-              />
+              {product.image_url ? (
+                <Image
+                  src={product.image_url}
+                  width={40}
+                  height={40}
+                  alt={product.name}
+                />
+              ) : null}
               {/* <img
                 className="rounded-b-lg flex items-center justify-center rounded-md w-full h-full object-contain"
                 src={product.image_url}
