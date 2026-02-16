@@ -42,6 +42,7 @@ export default function Navbar() {
           <div className="flex gap-3">
             <Link href={"/products"}>Products</Link>
             <Link href={"/carts"}>Cart</Link>
+            <Link href={"/admin/products"}>Admin</Link>
           </div>
           <div className="flex flex-col">
             <h2 className="text-white text-sm">{user?.email}</h2>

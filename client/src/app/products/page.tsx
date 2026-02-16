@@ -1,8 +1,9 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { apiFetch } from "@/src/lib/apiClient";
 import Navbar from "@/src/components/navbar";
 import Image from "next/image";
+import { log } from "console";
 
 type Product = {
   id: string;
@@ -19,6 +20,20 @@ export default function Products() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [addId, setAddId] = useState<string | null>(null);
+  // const [currentPage, setCurrentPage] = useState<number>(1);
+  // const [itemPerPage, setItemPerPage] = useState<number>(12);
+  // const [sortedProduct, setSortedProduct] = useState<number>(1);
+
+  // const totalPageCount = Math.max(
+  //   1,
+  //   Math.ceil(sortedProduct / products.length),
+  // );
+
+  // useEffect(() => {
+  //   setCurrentPage(1);
+  // }, [itemPerPage]);
+
+  // const pageProduct = useMemo(() => {});
 
   useEffect(() => {
     const fetchProducts = async () => {

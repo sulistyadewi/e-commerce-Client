@@ -121,15 +121,31 @@ export default function ProductAdmin() {
           .getPublicUrl(filePath);
         imageUrl = data.publicUrl;
       }
-      const payLoad = {
+      if (!imageFile && !imageUrl && !editId) {
+        let existingForm = products.find((item) => item.id === editId);
+        imageUrl = existingForm?.image_url ?? null;
+      }
+      const payLoad: {
+        name: string;
+        description: string;
+        price: number;
+        stock: number;
+        rating: number | null;
+        category_id: string;
+        image_url?: string | null;
+      } = {
         name: form.name,
         description: form.description,
         price: Number(form.price),
         stock: Number(form.stock),
         rating: form.rating ? Number(form.rating) : null,
-        image_url: imageUrl || null,
+        // image_url: imageUrl || null,
         category_id: form.category_id,
       };
+      if (imageUrl) {
+        payLoad.image_url = imageUrl;
+      }
+
       if (editId) {
         await apiFetch(`/product/${editId}`, { method: "PUT", body: payLoad });
       } else {
