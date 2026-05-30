@@ -36,13 +36,28 @@ export default function Navbar() {
     <div>
       <div className="w-full h-14 bg-emerald-600 flex justify-between px-5 items-center-safe">
         <div>
-          <h1>Store</h1>
+          <h1 className="">Store</h1>
         </div>
-        <div className="flex gap-5">
-          <div className="flex gap-3">
-            <Link href={"/products"}>Products</Link>
-            <Link href={"/carts"}>Cart</Link>
-            <Link href={"/admin/products"}>Admin</Link>
+        <div className="flex gap-8">
+          <div className="flex gap-3 items-center font-semibold text-emerald-50 ">
+            <Link
+              href={"/products"}
+              className="hover:underline hover:text-emerald-200"
+            >
+              Products
+            </Link>
+            <Link
+              href={"/carts"}
+              className="hover:underline hover:text-emerald-200"
+            >
+              Cart
+            </Link>
+            <Link
+              href={"/admin/products"}
+              className="hover:underline hover:text-emerald-200"
+            >
+              Admin
+            </Link>
           </div>
           <div className="flex flex-col">
             <h2 className="text-white text-sm">{user?.email}</h2>

@@ -159,18 +159,21 @@ export default function Products() {
             className="bg-slate-300"
           />
         </div>
-        <div>
+        <div className="flex gap-2">
           <label htmlFor="">Sorted by</label>
           <select
             name=""
             id=""
             value={sortOptions}
             onChange={(e) => setSortOPtions(e.target.value as SortOptions)}
+            className="border rounded-md"
           >
-            <option value="name-Ascending">A-Z</option>
+            <option value="name-Ascending" className="">
+              A-Z
+            </option>
             <option value="name-Descending">Z-A</option>
-            <option value="price-Ascending">Termurah-Termahal</option>
-            <option value="price-Descending">Termahal-Termurah</option>
+            <option value="price-Ascending">Cheap-Expensive</option>
+            <option value="price-Descending">Expensive-Cheap</option>
           </select>
         </div>
       </div>
@@ -218,7 +221,9 @@ export default function Products() {
               <p className="text-sm text-slate-500 capitalize">
                 {product.description}
               </p>
-              <h2 className="capitalize">Rp {product.price}</h2>
+              <h2 className="capitalize">
+                Rp {product.price.toLocaleString("id")}
+              </h2>
               <h3 className="text-sm text-slate-500">{product.stock}</h3>
               <div className="flex gap-2 mt-3 justify-between">
                 <button className="border border-blue-400 px-4 py-2 rounded-xl text-sm">
