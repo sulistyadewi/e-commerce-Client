@@ -3,6 +3,8 @@ import React, { useState, useEffect, useMemo } from "react";
 import { apiFetch } from "@/src/lib/apiClient";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/src/lib/supabaseClient";
+import Image from "next/image";
+import toast, { Toaster } from "react-hot-toast";
 import { IoClose } from "react-icons/io5";
 import { IoMdAdd } from "react-icons/io";
 
@@ -21,6 +23,17 @@ type Product = {
   rating: number | null;
   image_url: string | null;
   category_id: string | null;
+};
+
+const EmptyProduct: Product = {
+  id: "",
+  name: "",
+  description: "",
+  price: 0,
+  stock: 0,
+  rating: null,
+  image_url: "",
+  category_id: "",
 };
 
 type ProductForm = {
@@ -59,6 +72,7 @@ export default function ProductAdmin() {
   const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
   const [sortOptions, setSortOptions] = useState<SortOptions>("name-ascending");
   const [selectCategory, setSelectCategory] = useState<string>("");
+  const [selectedProduct, setSelectedProduct] = useState<Product>(EmptyProduct);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -160,8 +174,10 @@ export default function ProductAdmin() {
 
       if (editId) {
         await apiFetch(`/product/${editId}`, { method: "PUT", body: payLoad });
+        toast.success("Updated Successfully");
       } else {
         await apiFetch("/product", { method: "POST", body: payLoad });
+        toast.success("Added Successfully");
       }
       await fetchProduct();
       resetForm();
@@ -186,7 +202,7 @@ export default function ProductAdmin() {
       description: product.description ?? "",
       price: String(product.price) ?? "",
       stock: String(product.stock) ?? "",
-      image_url: product.image_url ?? "",
+      // image_url: product.image_url ?? "",
       rating: product.rating ? String(product.rating) : "",
       category_id: product.category_id ?? "",
     });
@@ -194,11 +210,12 @@ export default function ProductAdmin() {
   };
 
   const handleDelete = async (productId: string) => {
-    const confirmDelete = window.confirm("Apakah Produk ingin dihapus?");
-    if (!confirmDelete) return;
+    // const confirmDelete = window.confirm("Apakah Produk ingin dihapus?");
+    // if (!confirmDelete) return;
     try {
       await apiFetch(`/product/${productId}`, { method: "DELETE" });
       await fetchProduct();
+      // toast.success("Deleted Successfully");
     } catch (err) {
       console.log(err);
     }
@@ -251,269 +268,323 @@ export default function ProductAdmin() {
   }, [searchQuery, selectCategory, sortOptions]);
 
   return (
-    <div>
-      {isAdmin === false ? (
-        <div>Halaman ini hanya untuk Admin</div>
-      ) : (
-        <div>
-          {isFormOpen && (
-            <div className="fixed inset-0 flex flex-col justify-center items-center bg-black/50">
-              <div className="fixed mb-116 ml-108">
-                <button
-                  onClick={() => setIsFormOpen(false)}
-                  className="bg-red-600 rounded-full w-8 h-8 font-semibold"
+    <div className="bg-green-50">
+      <Toaster position="bottom-right" />
+      <div>
+        {isAdmin === false ? (
+          <div>Halaman ini hanya untuk Admin</div>
+        ) : (
+          <div>
+            {isFormOpen && (
+              <div className="fixed inset-0 flex flex-col justify-center items-center bg-black/50">
+                <div className="fixed mb-116 ml-108">
+                  <button
+                    onClick={() => setIsFormOpen(false)}
+                    className="bg-red-600 rounded-full w-8 h-8 font-semibold"
+                  >
+                    <IoClose
+                      aria-hidden="true"
+                      className="text-white mx-auto text-2xl"
+                    />
+                  </button>
+                </div>
+                <form
+                  onSubmit={handleSubmit}
+                  className="bg-green-300 max-w-md flex flex-col justify-center p-4 rounded-lg"
                 >
-                  <IoClose
-                    aria-hidden="true"
-                    className="text-white mx-auto text-2xl"
-                  />
-                </button>
+                  {/* =====NAME===== */}
+                  <div className="flex flex-col">
+                    <label htmlFor="">Product Name</label>
+                    <input
+                      type="text"
+                      value={form.name}
+                      onChange={(e) => handleChange("name", e.target.value)}
+                      className="bg-white p-2 rounded-md"
+                    />
+                  </div>
+                  {/* ======DESCRIPTION====== */}
+                  <div className="flex flex-col mt-2">
+                    <label htmlFor="">Description</label>
+                    <textarea
+                      name=""
+                      id=""
+                      value={form.description}
+                      onChange={(e) =>
+                        handleChange("description", e.target.value)
+                      }
+                      className="bg-white p-2 rounded-md"
+                    />
+                  </div>
+                  {/* ======IMAGE====== */}
+                  <div className="flex flex-col mt-2">
+                    <label htmlFor="">Image Link</label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) =>
+                        setImageFile(e.target.files?.[0] ?? null)
+                      }
+                      className="bg-white p-2 rounded-md"
+                    />
+                  </div>{" "}
+                  {/* ======PRICE & STOCK====== */}
+                  <div className="flex gap-3 mt-2">
+                    {/* =====PRICE===== */}
+                    <div className="flex flex-col">
+                      <label htmlFor="">Price</label>
+                      <input
+                        type="text"
+                        value={form.price}
+                        onChange={(e) => handleChange("price", e.target.value)}
+                        className="bg-white p-2 rounded-md"
+                      />
+                    </div>{" "}
+                    {/* =====STOCK===== */}
+                    <div className="flex flex-col">
+                      <label htmlFor="">Stock</label>
+                      <input
+                        type="text"
+                        value={form.stock}
+                        onChange={(e) => handleChange("stock", e.target.value)}
+                        className="bg-white p-2 rounded-md"
+                      />
+                    </div>{" "}
+                  </div>
+                  {/* ======RATING & CATEGORY====== */}
+                  <div className="flex gap-3 mt-2">
+                    {/* ====RATING==== */}
+                    <div className="flex flex-col">
+                      <label htmlFor="">Rating</label>
+                      <input
+                        type="text"
+                        value={form.rating}
+                        onChange={(e) => handleChange("rating", e.target.value)}
+                        className="bg-white p-2 rounded-md"
+                      />
+                    </div>{" "}
+                    {/* =====CATEGORY===== */}
+                    <div className="flex flex-col">
+                      <label htmlFor="">Category</label>
+                      <select
+                        id=""
+                        value={form.category_id}
+                        onChange={(e) =>
+                          handleChange("category_id", e.target.value)
+                        }
+                        className="bg-white p-2 p rounded-md"
+                      >
+                        <option value="">Pilih Category</option>
+                        {category.map((item, id) => (
+                          <option value={item.id} key={id}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>{" "}
+                  </div>
+                  <div className="flex gap-3">
+                    <button
+                      type="submit"
+                      disabled={saving}
+                      className="px-2 py-2 bg-green-800 rounded mt-5 w-full text-white"
+                    >
+                      {saving ? "Saving..." : editId ? "Edit" : "Create"}
+                    </button>
+                    {editId ? (
+                      <button className=" px-2 py-2 bg-red-500 text-white rounded mt-5">
+                        Cancel
+                      </button>
+                    ) : null}
+                  </div>
+                </form>
               </div>
-              <form
-                onSubmit={handleSubmit}
-                className="bg-green-300 max-w-md flex flex-col justify-center p-4 rounded-lg"
-              >
-                {/* =====NAME===== */}
-                <div className="flex flex-col">
-                  <label htmlFor="">Product Name</label>
+            )}
+
+            {selectedProduct && (
+              <div>
+                <h1>{selectedProduct.name}</h1>
+                <p>{selectedProduct.description}</p>
+                <Image
+                  width={80}
+                  height={80}
+                  src={selectedProduct.image_url}
+                  alt={selectedProduct.name}
+                />
+                <h3>{selectedProduct.price}</h3>
+                <h3>{selectedProduct.stock}</h3>
+              </div>
+            )}
+
+            <div className="flex justify-between p-4 mt-4">
+              <div className="flex justify-start gap-3">
+                <div className="">
                   <input
                     type="text"
-                    value={form.name}
-                    onChange={(e) => handleChange("name", e.target.value)}
-                    className="bg-white p-2 rounded-md"
+                    placeholder="Search"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="border p-2 rounded-lg w-64"
                   />
                 </div>
-                {/* ======DESCRIPTION====== */}
-                <div className="flex flex-col mt-2">
-                  <label htmlFor="">Description</label>
-                  <textarea
+
+                <div className="">
+                  <select
                     name=""
                     id=""
-                    value={form.description}
+                    value={sortOptions}
                     onChange={(e) =>
-                      handleChange("description", e.target.value)
+                      setSortOptions(e.target.value as SortOptions)
                     }
-                    className="bg-white p-2 rounded-md"
-                  />
-                </div>
-                {/* ======IMAGE====== */}
-                <div className="flex flex-col mt-2">
-                  <label htmlFor="">Image Link</label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
-                    className="bg-white p-2 rounded-md"
-                  />
-                </div>{" "}
-                {/* ======PRICE & STOCK====== */}
-                <div className="flex gap-3 mt-2">
-                  {/* =====PRICE===== */}
-                  <div className="flex flex-col">
-                    <label htmlFor="">Price</label>
-                    <input
-                      type="text"
-                      value={form.price}
-                      onChange={(e) => handleChange("price", e.target.value)}
-                      className="bg-white p-2 rounded-md"
-                    />
-                  </div>{" "}
-                  {/* =====STOCK===== */}
-                  <div className="flex flex-col">
-                    <label htmlFor="">Stock</label>
-                    <input
-                      type="text"
-                      value={form.stock}
-                      onChange={(e) => handleChange("stock", e.target.value)}
-                      className="bg-white p-2 rounded-md"
-                    />
-                  </div>{" "}
-                </div>
-                {/* ======RATING & CATEGORY====== */}
-                <div className="flex gap-3 mt-2">
-                  {/* ====RATING==== */}
-                  <div className="flex flex-col">
-                    <label htmlFor="">Rating</label>
-                    <input
-                      type="text"
-                      value={form.rating}
-                      onChange={(e) => handleChange("rating", e.target.value)}
-                      className="bg-white p-2 rounded-md"
-                    />
-                  </div>{" "}
-                  {/* =====CATEGORY===== */}
-                  <div className="flex flex-col">
-                    <label htmlFor="">Category</label>
-                    <select
-                      id=""
-                      value={form.category_id}
-                      onChange={(e) =>
-                        handleChange("category_id", e.target.value)
-                      }
-                      className="bg-white p-2 p rounded-md"
-                    >
-                      <option value="">Pilih Category</option>
-                      {category.map((item, id) => (
-                        <option value={item.id} key={id}>
-                          {item.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>{" "}
-                </div>
-                <div className="flex gap-3">
-                  <button
-                    type="submit"
-                    disabled={saving}
-                    className="px-2 py-2 bg-green-800 rounded mt-5 w-full text-white"
+                    className="border rounded-md p-2"
                   >
-                    {saving ? "Saving..." : editId ? "Edit" : "Create"}
-                  </button>
-                  {editId ? (
-                    <button className=" px-2 py-2 bg-red-500 text-white rounded mt-5">
-                      Cancel
-                    </button>
-                  ) : null}
+                    <option value="name-ascending">Name A-Z</option>
+                    <option value="name-descending">Name Z-A</option>
+                    <option value="price-ascending">Termurah-Termahal</option>
+                    <option value="price-descending">Termahal-Termurah</option>
+                  </select>
                 </div>
-              </form>
-            </div>
-          )}
 
-          <div className="flex justify-between p-4 mt-4">
-            <div className="flex justify-start gap-3">
-              <div className="">
-                <input
-                  type="text"
-                  placeholder="Search"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="border p-2 rounded-lg w-64"
-                />
+                <div>
+                  <select
+                    name=""
+                    id=""
+                    value={selectCategory}
+                    onChange={(e) => setSelectCategory(e.target.value)}
+                    className="border rounded-md p-2"
+                  >
+                    <option value="">Select Category</option>
+                    {category.map((item, index) => (
+                      <option key={index} value={item.id}>
+                        {item.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               <div className="">
-                <select
-                  name=""
-                  id=""
-                  value={sortOptions}
-                  onChange={(e) =>
-                    setSortOptions(e.target.value as SortOptions)
-                  }
-                  className="border rounded-md p-2"
+                <button
+                  onClick={() => setIsFormOpen(true)}
+                  className="mx-auto bg-green-600 w-10 h-10 rounded-full"
                 >
-                  <option value="name-ascending">Name A-Z</option>
-                  <option value="name-descending">Name Z-A</option>
-                  <option value="price-ascending">Termurah-Termahal</option>
-                  <option value="price-descending">Termahal-Termurah</option>
-                </select>
-              </div>
-
-              <div>
-                <select
-                  name=""
-                  id=""
-                  value={selectCategory}
-                  onChange={(e) => setSelectCategory(e.target.value)}
-                  className="border rounded-md p-2"
-                >
-                  <option value="">Select Category</option>
-                  {category.map((item) => (
-                    <option value={item.id}>{item.name}</option>
-                  ))}
-                </select>
+                  <IoMdAdd className="mx-auto text-white text-2xl font-semibold" />
+                </button>
               </div>
             </div>
 
-            <div className="">
-              <button
-                onClick={() => setIsFormOpen(true)}
-                className="mx-auto bg-green-600 w-10 h-10 rounded-full"
-              >
-                <IoMdAdd className="mx-auto text-white text-2xl font-semibold" />
-              </button>
-            </div>
-          </div>
-
-          <div className="overflow-x-auto shadow-xs rounded-md border  border-emerald-500 mx-3 mt-2">
-            <table className="w-full text-sm text-left rtl:text-right rounded">
-              <thead className="text-sm bg-emerald-500 rounded-md">
-                <tr>
-                  {/* <th scope="col" className="px-6 py-3 font-medium">
+            <div className="overflow-x-auto shadow-xs rounded-md border  border-emerald-500 mx-3 mt-2">
+              <table className="w-full text-sm text-left rtl:text-right rounded">
+                <thead className="text-sm bg-emerald-500 rounded-md">
+                  <tr>
+                    {/* <th scope="col" className="px-6 py-3 font-medium">
                     Image
                   </th> */}
-                  <th scope="col" className="px-6 py-3 font-medium">
-                    Product Name
-                  </th>
-                  <th scope="col" className="px-6 py-3 font-medium">
-                    Description
-                  </th>
-                  <th scope="col" className="px-6 py-3 font-medium">
-                    Price
-                  </th>
-                  <th scope="col" className="px-6 py-3 font-medium">
-                    Stock
-                  </th>
-                  <th scope="col" className="px-6 py-3 font-medium">
-                    <span className="sr-only">Edit</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="">
-                {pageProductAdmin.map((product, index) => (
-                  <tr
-                    key={index}
-                    className="bg-neutral-primary-soft border-b border-default hover:bg-neutral-secondary-medium"
-                  >
-                    {/* <th
+                    <th scope="col" className="px-6 py-3 font-medium">
+                      Product Name
+                    </th>
+                    <th scope="col" className="px-6 py-3 font-medium">
+                      Description
+                    </th>
+                    <th scope="col" className="px-6 py-3 font-medium">
+                      Price
+                    </th>
+                    <th scope="col" className="px-6 py-3 font-medium">
+                      Stock
+                    </th>
+                    <th scope="col" className="px-6 py-3 font-medium">
+                      <span className="sr-only">Edit</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="">
+                  {pageProductAdmin.map((product, index) => (
+                    <tr
+                      key={index}
+                      onClick={() => setSelectedProduct(product)}
+                      className="bg-neutral-primary-soft border-b border-default hover:bg-neutral-secondary-medium"
+                    >
+                      {/* <th
                       scope="row"
                       className="px-6 py-4 font-medium text-heading whitespace-nowrap w-20 h-20"
                     >
                       <img src={product.image_url} alt={product.name} />
                     </th> */}
-                    <td className="px-6 py-4">{product.name}</td>
-                    <td className="px-6 py-4">{product.description}</td>
-                    <td className="px-6 py-4">
-                      Rp {product.price.toLocaleString("id")}
-                    </td>
-                    <td className="px-6 py-4">{product.stock}</td>
-                    <td className="px-6 py-4 text-right">
-                      <button
-                        onClick={() => handleEdit(product)}
-                        className="text-blue-400 hover:underline mx-2"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(product.id)}
-                        className="text-red-400 hover:underline"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      <td className="px-6 py-4">{product.name}</td>
+                      <td className="px-6 py-4">{product.description}</td>
+                      <td className="px-6 py-4">
+                        Rp {product.price.toLocaleString("id")}
+                      </td>
+                      <td className="px-6 py-4">{product.stock}</td>
+                      <td className="px-6 py-4 text-right">
+                        <button
+                          onClick={() => handleEdit(product)}
+                          className="text-blue-400 hover:underline mx-2"
+                        >
+                          Edit
+                        </button>
+                        {/* =====BUTTON DELETE===== */}
+                        <button
+                          onClick={() => {
+                            toast((t) => (
+                              <div className="p-2">
+                                <p>Are you sure?</p>
+                                <div className="flex gap-3 mt-2">
+                                  <button
+                                    className="bg-red-500 rounded-md py-1 px-3 text-white"
+                                    onClick={async () => {
+                                      toast.dismiss(t.id);
+                                      try {
+                                        handleDelete(product.id);
+                                        toast.success(
+                                          "Product Deleted Successfully",
+                                        );
+                                      } catch {
+                                        toast.error("Failed Deleted Product");
+                                      }
+                                    }}
+                                  >
+                                    Yes
+                                  </button>
+                                  <button
+                                    className="border border-red-5000 rounded-md py-1 px-3"
+                                    onClick={() => toast.dismiss(t.id)}
+                                  >
+                                    No
+                                  </button>
+                                </div>
+                              </div>
+                            ));
+                          }}
+                          className="text-red-400 hover:underline"
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="flex justify-center gap-2">
+              <button
+                onClick={() => setCurrentPage((e) => Math.max(1, e - 1))}
+                disabled={currentPage === 1}
+                className="hover:cursor-pointer disabled:text-slate-400"
+              >
+                Prev
+              </button>
+              <h1>{` ${currentPage} / ${totalPageCount} `}</h1>
+              <button
+                onClick={() => setCurrentPage((e) => Math.max(1, e + 1))}
+                disabled={currentPage === totalPageCount}
+                className="hover:cursor-pointer disabled:text-slate-400"
+              >
+                Next
+              </button>
+            </div>
           </div>
-          <div className="flex justify-center gap-2">
-            <button
-              onClick={() => setCurrentPage((e) => Math.max(1, e - 1))}
-              disabled={currentPage === 1}
-              className="hover:cursor-pointer disabled:text-slate-400"
-            >
-              Prev
-            </button>
-            <h1>{` ${currentPage} / ${totalPageCount} `}</h1>
-            <button
-              onClick={() => setCurrentPage((e) => Math.max(1, e + 1))}
-              disabled={currentPage === totalPageCount}
-              className="hover:cursor-pointer disabled:text-slate-400"
-            >
-              Next
-            </button>
-          </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

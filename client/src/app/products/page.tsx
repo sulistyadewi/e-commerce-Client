@@ -129,44 +129,47 @@ export default function Products() {
   };
 
   return (
-    <div className="flex flex-col justify-center bg-">
+    <div className="flex flex-col justify-center bg-green-50 ">
       {/* {products.length === 0 ? (
         <p>no products avaible.</p>
       ) : ( */}
-      <div>
-        <div className="flex gap-3">
-          <label htmlFor="">Filter</label>
+      <div className="flex justify-between px-3 mt-5 mb-3">
+        <div className="flex gap-3 items-center">
+          <label htmlFor="">Filter:</label>
           <label htmlFor="">
             <input
               type="checkbox"
               checked={isStock}
               onChange={(e) => setIsStock(e.target.checked)}
-            />
+            />{" "}
             Stock Only
           </label>
           <input
             type="number"
             min="0"
             value={minPrice}
+            placeholder="Rp 0"
             onChange={(e) => setMinPrice(e.target.value)}
-            className="bg-slate-300"
+            className="bg-slate-200 rounded-lg p-2"
           />
+          <span className="font-bold">-</span>
           <input
             type="number"
             max="0"
             value={maxPrice}
+            placeholder="Rp 0"
             onChange={(e) => setMaxPrice(e.target.value)}
-            className="bg-slate-300"
+            className="bg-slate-200 rounded-lg p-2"
           />
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
           <label htmlFor="">Sorted by</label>
           <select
             name=""
             id=""
             value={sortOptions}
             onChange={(e) => setSortOPtions(e.target.value as SortOptions)}
-            className="border rounded-md"
+            className="border rounded-md py-2"
           >
             <option value="name-Ascending" className="">
               A-Z
@@ -200,14 +203,14 @@ export default function Products() {
             key={product.id}
             className="bg-white max-w-56 rounded-md drop-shadow-lg transition-shadow mt-5"
           >
-            <div className="rounded-b-lg h-40 flex items-center justify-center rounded-md bg-gray-200">
+            <div className="rounded-b-lg h-40 flex items-center justify-center rounded-md bg-gray-100">
               {product.image_url ? (
                 <Image
                   src={product.image_url}
-                  width={80}
-                  height={80}
+                  width={100}
+                  height={100}
                   alt={product.name}
-                  className="object-cover"
+                  className="object-contain w-full h-full"
                 />
               ) : null}
               {/* <img
